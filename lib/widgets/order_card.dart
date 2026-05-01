@@ -13,23 +13,18 @@ class OrderCard extends StatelessWidget {
     required this.onDismissed,
   });
 
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'Preparing':
-        return Colors.orange;
-      case 'Out for Delivery':
-        return Colors.blue;
-      case 'Delivered':
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
+  Color _c(String s) {
+    if (s == 'accepted') return Colors.orange;
+    if (s == 'assigned' || s == 'picked_up' || s == 'delivering') return Colors.blue;
+    if (s == 'delivered') return Colors.green;
+    if (s == 'cancelled') return Colors.red;
+    return Colors.grey;
   }
 
   @override
   Widget build(BuildContext context) {
     return Dismissible(
-      key: ValueKey(order.id ?? order.timestamp),
+      key: ValueKey(order.id),
       direction: DismissDirection.endToStart,
       onDismissed: onDismissed,
       background: Container(
@@ -41,18 +36,18 @@ class OrderCard extends StatelessWidget {
       child: Card(
         child: ListTile(
           onTap: onTap,
-          title: Text(order.restaurant),
-          subtitle: Text(order.item),
+          title: Text(order.restaurantName),
+          subtitle: Text(order.itemName),
           trailing: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: _statusColor(order.status).withOpacity(0.15),
+              color: _c(order.status).withOpacity(0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
               order.status,
               style: TextStyle(
-                color: _statusColor(order.status),
+                color: _c(order.status),
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
               ),
