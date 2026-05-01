@@ -27,21 +27,6 @@ class Order {
     required this.updatedAt,
   });
 
-  Map<String, dynamic> toMap() {
-    return {
-      'customerId': customerId,
-      'restaurantId': restaurantId,
-      'driverId': driverId,
-      'restaurantName': restaurantName,
-      'itemName': itemName,
-      'notes': notes,
-      'status': status,
-      'urgencyScore': urgencyScore,
-      'createdAt': Timestamp.fromDate(createdAt),
-      'updatedAt': Timestamp.fromDate(updatedAt),
-    };
-  }
-
   factory Order.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     final d = doc.data()!;
     return Order(
