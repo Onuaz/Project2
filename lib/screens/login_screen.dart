@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/notification_service.dart';
 import 'role_select_screen.dart';
 import 'home_customer.dart';
 import 'home_restaurant.dart';
@@ -16,11 +17,16 @@ class _LoginScreenState extends State<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _auth = AuthService();
+  final _notify = NotificationService();
 
   Future<void> _login() async {
     final user = await _auth.signIn(_email.text.trim(), _password.text.trim());
     if (user == null) return;
+
+    await _notify.saveToken(user.uid);
+
     final role = await _auth.getRole(user.uid);
+    if (!mounted) return;
     if (role == 'customer') {
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeCustomer()));
     } else if (role == 'restaurant') {

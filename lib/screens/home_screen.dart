@@ -57,7 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Food Runner')),
       body: StreamBuilder<List<Order>>(
-        stream: _service.watchCustomerOrders(_customerId!),
+        stream: _service.watchCustomerOrders(_customerId!).cast<List<Order>>(),
         builder: (c, s) {
           if (!s.hasData) {
             return const Center(child: CircularProgressIndicator());

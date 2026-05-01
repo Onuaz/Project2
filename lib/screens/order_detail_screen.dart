@@ -8,11 +8,6 @@ class OrderDetailScreen extends StatelessWidget {
 
   OrderDetailScreen({super.key, required this.orderId});
 
-  Future<void> _delete(BuildContext context, Order o) async {
-    await _service.deleteOrder(o.id);
-    if (context.mounted) Navigator.pop(context, true);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,7 +20,7 @@ class OrderDetailScreen extends StatelessWidget {
           }
           final o = s.data!;
           return Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -33,29 +28,13 @@ class OrderDetailScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(o.itemName, style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    const Text('Status: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text(o.status),
-                  ],
-                ),
+                Text('Status: ${o.status}'),
                 const SizedBox(height: 8),
-                Text('Placed at: ${o.createdAt}'),
-                const SizedBox(height: 16),
+                Text('Placed: ${o.createdAt}'),
                 if (o.notes != null && o.notes!.isNotEmpty) ...[
-                  const Text('Notes:', style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
-                  Text(o.notes!),
+                  const SizedBox(height: 16),
+                  Text('Notes: ${o.notes!}'),
                 ],
-                const Spacer(),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => _delete(context, o),
-                    icon: const Icon(Icons.delete),
-                    label: const Text('Cancel Order'),
-                  ),
-                ),
               ],
             ),
           );

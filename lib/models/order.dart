@@ -12,6 +12,8 @@ class Order {
   final double urgencyScore;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final int? rating;
+  final String? review;
 
   Order({
     required this.id,
@@ -25,6 +27,8 @@ class Order {
     required this.urgencyScore,
     required this.createdAt,
     required this.updatedAt,
+    this.rating,
+    this.review,
   });
 
   factory Order.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
@@ -41,6 +45,8 @@ class Order {
       urgencyScore: (d['urgencyScore'] as num).toDouble(),
       createdAt: (d['createdAt'] as Timestamp).toDate(),
       updatedAt: (d['updatedAt'] as Timestamp).toDate(),
+      rating: d['rating'],
+      review: d['review'],
     );
   }
 }
