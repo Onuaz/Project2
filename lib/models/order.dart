@@ -1,42 +1,61 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Order {
-  int? id;
-  String restaurant;
-  String item;
-  String? notes;
-  String status;
-  String timestamp;
+  final String id;
+  final String customerId;
+  final String restaurantId;
+  final String? driverId;
+  final String restaurantName;
+  final String itemName;
+  final String? notes;
+  final String status;
+  final double urgencyScore;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   Order({
-    this.id,
-    required this.restaurant,
-    required this.item,
+    required this.id,
+    required this.customerId,
+    required this.restaurantId,
+    this.driverId,
+    required this.restaurantName,
+    required this.itemName,
     this.notes,
     required this.status,
-    required this.timestamp,
+    required this.urgencyScore,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
   Map<String, dynamic> toMap() {
-    final map = <String, dynamic>{
-      'restaurant': restaurant,
-      'item': item,
+    return {
+      'customerId': customerId,
+      'restaurantId': restaurantId,
+      'driverId': driverId,
+      'restaurantName': restaurantName,
+      'itemName': itemName,
       'notes': notes,
       'status': status,
-      'timestamp': timestamp,
+      'urgencyScore': urgencyScore,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'updatedAt': Timestamp.fromDate(updatedAt),
     };
-    if (id != null) {
-      map['id'] = id;
-    }
-    return map;
   }
 
-  factory Order.fromMap(Map<String, dynamic> map) {
+  factory Order.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final d = doc.data()!;
     return Order(
-      id: map['id'] as int?,
-      restaurant: map['restaurant'] as String,
-      item: map['item'] as String,
-      notes: map['notes'] as String?,
-      status: map['status'] as String,
-      timestamp: map['timestamp'] as String,
+      id: doc.id,
+      customerId: d['customerId'],
+      restaurantId: d['restaurantId'],
+      driverId: d['driverId'],
+      restaurantName: d['restaurantName'],
+      itemName: d['itemName'],
+      notes: d['notes'],
+      status: d['status'],
+      urgencyScore: (d['urgencyScore'] as num).toDouble(),
+      createdAt: (d['createdAt'] as Timestamp).toDate(),
+      updatedAt: (d['updatedAt'] as Timestamp).toDate(),
     );
   }
 }
