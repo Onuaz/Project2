@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
-import '../db/db_helper.dart';
-import '../models/order.dart';
+import '../services/order_service.dart';
 
 class AddOrderScreen extends StatefulWidget {
-  final Order? existingOrder;
+  final String customerId;
+  final String restaurantId;
+  final String restaurantName;
 
-  const AddOrderScreen({super.key, this.existingOrder});
+  const AddOrderScreen({
+    super.key,
+    required this.customerId,
+    required this.restaurantId,
+    required this.restaurantName,
+  });
 
   @override
   State<AddOrderScreen> createState() => _AddOrderScreenState();
@@ -13,147 +19,65 @@ class AddOrderScreen extends StatefulWidget {
 
 class _AddOrderScreenState extends State<AddOrderScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _restaurantController = TextEditingController();
-  final _itemController = TextEditingController();
-  final _notesController = TextEditingController();
-  String _status = 'Pending';
-
-  final _dbHelper = DBHelper();
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.existingOrder != null) {
-      _restaurantController.text = widget.existingOrder!.restaurant;
-      _itemController.text = widget.existingOrder!.item;
-      _notesController.text = widget.existingOrder!.notes ?? '';
-      _status = widget.existingOrder!.status;
-    }
-  }
+  final _item = TextEditingController();
+  final _notes = TextEditingController();
+  final _service = OrderService();
 
   @override
   void dispose() {
-    _restaurantController.dispose();
-    _itemController.dispose();
-    _notesController.dispose();
+    _item.dispose();
+    _notes.dispose();
     super.dispose();
   }
 
-  Future<void> _saveOrder() async {
+  Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-
-    final now = DateTime.now().toIso8601String();
-
-    if (widget.existingOrder == null) {
-      final newOrder = Order(
-        restaurant: _restaurantController.text.trim(),
-        item: _itemController.text.trim(),
-        notes: _notesController.text.trim().isEmpty
-            ? null
-            : _notesController.text.trim(),
-        status: _status,
-        timestamp: now,
-      );
-      await _dbHelper.insertOrder(newOrder);
-    } else {
-      final updatedOrder = Order(
-        id: widget.existingOrder!.id,
-        restaurant: _restaurantController.text.trim(),
-        item: _itemController.text.trim(),
-        notes: _notesController.text.trim().isEmpty
-            ? null
-            : _notesController.text.trim(),
-        status: _status,
-        timestamp: widget.existingOrder!.timestamp,
-      );
-      await _dbHelper.updateOrder(updatedOrder);
-    }
-
-    if (mounted) {
-      Navigator.pop(context, true); // indicate refresh
-    }
+    await _service.createOrder(
+      customerId: widget.customerId,
+      restaurantId: widget.restaurantId,
+      restaurantName: widget.restaurantName,
+      itemName: _item.text.trim(),
+      notes: _notes.text.trim().isEmpty ? null : _notes.text.trim(),
+    );
+    if (mounted) Navigator.pop(context, true);
   }
 
   @override
   Widget build(BuildContext context) {
-    final isEditing = widget.existingOrder != null;
-
     return Scaffold(
-      appBar: AppBar(
-        title: Text(isEditing ? 'Edit Order' : 'Add Order'),
-      ),
+      appBar: AppBar(title: const Text('Place Order')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: ListView(
             children: [
-              TextFormField(
-                controller: _restaurantController,
-                decoration: const InputDecoration(
-                  labelText: 'Restaurant',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) =>
-                    (value == null || value.trim().isEmpty)
-                        ? 'Restaurant is required'
-                        : null,
-              ),
+              Text(widget.restaurantName, style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
               TextFormField(
-                controller: _itemController,
+                controller: _item,
                 decoration: const InputDecoration(
                   labelText: 'Food Item',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) =>
-                    (value == null || value.trim().isEmpty)
-                        ? 'Food item is required'
-                        : null,
+                validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
-                controller: _notesController,
+                controller: _notes,
                 decoration: const InputDecoration(
-                  labelText: 'Notes (optional)',
+                  labelText: 'Notes',
                   border: OutlineInputBorder(),
                 ),
                 maxLines: 2,
               ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _status,
-                decoration: const InputDecoration(
-                  labelText: 'Status',
-                  border: OutlineInputBorder(),
-                ),
-                items: const [
-                  DropdownMenuItem(value: 'Pending', child: Text('Pending')),
-                  DropdownMenuItem(value: 'Preparing', child: Text('Preparing')),
-                  DropdownMenuItem(
-                      value: 'Out for Delivery',
-                      child: Text('Out for Delivery')),
-                  DropdownMenuItem(
-                      value: 'Delivered', child: Text('Delivered')),
-                ],
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _status = value;
-                    });
-                  }
-                },
-              ),
               const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _saveOrder,
-                      child: Text(isEditing ? 'Save Changes' : 'Add Order'),
-                    ),
-                  ),
-                ],
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _save,
+                  child: const Text('Place Order'),
+                ),
               ),
             ],
           ),
