@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'cart_screen.dart';
 import 'orders_screen.dart';
 import 'restaurant_menu_editor.dart';
-import 'account_manager.dart';
 
 class HomeCustomer extends StatelessWidget {
   const HomeCustomer({super.key});
@@ -25,10 +24,21 @@ class HomeCustomer extends StatelessWidget {
     if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Added to cart')));
   }
 
+  Future<void> _createSampleRestaurant() async {
+    final doc = FirebaseFirestore.instance.collection('restaurants').doc();
+    await doc.set({
+      'name': 'Sample Pizza',
+      'address': '123 Example St',
+      'ownerId': 'sample-owner',
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+    final menu = FirebaseFirestore.instance.collection('restaurants').doc(doc.id).collection('menu');
+    await menu.add({'name': 'Margherita', 'price': 9.99, 'createdAt': FieldValue.serverTimestamp()});
+    await menu.add({'name': 'Pepperoni', 'price': 11.99, 'createdAt': FieldValue.serverTimestamp()});
+  }
+
   @override
   Widget build(BuildContext context) {
-    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(icon: const Icon(Icons.home), onPressed: () => Navigator.popUntil(context, (r) => r.isFirst)),
@@ -36,11 +46,24 @@ class HomeCustomer extends StatelessWidget {
         actions: [
           IconButton(icon: const Icon(Icons.shopping_cart), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CartScreen()))),
           IconButton(icon: const Icon(Icons.list), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OrdersScreen()))),
-          IconButton(icon: const Icon(Icons.people), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AccountManager()))),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        label: const Text('Refresh / Add Sample'),
+        icon: const Icon(Icons.refresh),
+        backgroundColor: const Color(0xFF00E5FF),
+        onPressed: () async {
+          final snap = await FirebaseFirestore.instance.collection('restaurants').limit(1).get();
+          if (snap.docs.isEmpty) {
+            await _createSampleRestaurant();
+            if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sample restaurant created')));
+          } else {
+            if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Restaurants already exist — refreshed')));
+          }
+        },
+      ),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: FirebaseFirestore.instance.collection('restaurants').orderBy('createdAt', descending: true).snapshots(),
+        stream: FirebaseFirestore.instance.collection('restaurants').snapshots(),
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
           if (!snap.hasData || snap.data!.docs.isEmpty) return const Center(child: Text('No restaurants yet', style: TextStyle(color: Colors.white)));
@@ -76,8 +99,7 @@ class HomeCustomer extends StatelessWidget {
   }
 }
 
-/// Lightweight menu viewer used by customers to browse and add items to cart.
-/// Reuses the restaurant menu collection; does not allow editing here.
+/// Menu viewer (unchanged)
 class RestaurantMenuViewer extends StatelessWidget {
   final String restaurantId;
   final void Function(Map<String, dynamic> item) onAdd;

@@ -1,42 +1,41 @@
 import 'package:flutter/material.dart';
-import '../services/restaurant_service.dart';
-import '../models/restaurant.dart';
-import 'menu_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:food_runner/screens/menu_screen.dart';
 
-class RestaurantListScreen extends StatelessWidget {
-  final _service = RestaurantService();
-
-  RestaurantListScreen({super.key});
+class HomeCustomer extends StatelessWidget {
+  const HomeCustomer({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Restaurants')),
-      body: StreamBuilder<List<Restaurant>>(
-        stream: _service.watchRestaurants(),
-        builder: (c, s) {
-          if (!s.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final restaurants = s.data!;
-          return ListView.builder(
-            itemCount: restaurants.length,
-            itemBuilder: (c, i) {
-              final r = restaurants[i];
-              return ListTile(
-                leading: Image.network(r.imageUrl, width: 60, height: 60, fit: BoxFit.cover),
-                title: Text(r.name),
-                subtitle: Text(r.address),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => MenuScreen(restaurant: r),
-                    ),
-                  );
-                },
-              );
-            },
+      appBar: AppBar(
+        title: const Text("Restaurants"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => FirebaseAuth.instance.signOut(),
+          )
+        ],
+      ),
+      body: StreamBuilder(
+        stream: FirebaseFirestore.instance.collection("restaurants").snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+          final restaurants = snapshot.data!.docs;
+
+          return ListView(
+            children: restaurants
+                .map((r) => ListTile(
+                      title: Text(r["name"]),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => MenuScreen(restaurantId: r.id, restaurantName: r["name"],),
+                        ),
+                      ),
+                    ))
+                .toList(),
           );
         },
       ),

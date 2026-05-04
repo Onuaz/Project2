@@ -85,4 +85,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'mad-project2-5a7b8.firebasestorage.app',
     measurementId: 'G-KZ3KMQZX0Z',
   );
+
 }
